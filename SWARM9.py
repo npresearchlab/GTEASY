@@ -1,0 +1,50 @@
+import serial
+import time
+arduinoData=serial.Serial('com15',115200)
+time.sleep(1)
+LC1 = 0
+lst = []
+start_time = time.time()
+seconds = 7  
+
+
+while (1==1):
+    while (arduinoData.inWaiting()==0):
+        pass
+    while True:
+            dataPacket=arduinoData.readline()
+            dataPacket=str(dataPacket,'utf-8')
+            splitPacket=dataPacket.split(',')
+            LC1=str(splitPacket[0])
+            # X=str(splitPacket[1])
+            # ledI=str(splitPacket[2])
+            #Time Grace Period = 7 seconds
+            current_time = time.time()
+            elapsed_time = current_time - start_time
+            lst.append(LC1)
+            print('LC=',LC1) #'Led Brightness=',ledI   ##'X=',X
+            #print(lst)
+
+
+            if elapsed_time > seconds:
+                maxval = max(lst)
+                print("Trial ended with max force of: " + str(int(maxval))  + " Units")
+                break
+    
+    
+    # ledI=str(splitPacket[2])
+
+    #print(dataPacket)
+    #  
+# while(True):
+#     #LC1 is load cell on palmar grip
+#     while(LC1.inWaiting()==0): #Have run for predetermined amount of time in whcih they are to produce the max grip force
+#         #max([812 814 814 815 815])
+#         while True:
+#             current_time = time.time()
+#             elapsed_time = current_time - start_time
+#             lst.append(LC1)
+#             if elapsed_time > seconds:
+#                 maxval = max(lst)
+#                 print("Trial ended with max force of: " + str(int(maxval))  + " Units")
+#                 break
