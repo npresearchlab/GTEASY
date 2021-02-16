@@ -1,0 +1,61 @@
+#include <Wire.h>
+#include "Adafruit_DRV2605.h"
+
+Adafruit_DRV2605 drv;
+
+const int LLC = A0;  //Lower load cell = LLC
+const int Start = A1;  // Simple on/off Start button
+const int LCP1 = A2;  // Load cell precision 1/2 = LCP1
+const int analogOutPin = 9; // Analog output pin that the LED is attached to
+int sensorValue = 0;
+int sensorValue1 = 0;
+int sensorValue2 = 0;
+int outputValue = 0;
+
+void setup() {
+  
+  Serial.begin(9600);
+  drv.begin();
+  
+}
+
+uint8_t effect = 1;
+
+// fuzz means too weak
+// buzz means too strong
+// click means just right
+
+void loop() {
+  if (effect == 1) {
+    Serial.println(F("13 − Soft Fuzz - 60%"));
+  }  
+  if (effect == 2) {
+    Serial.println(F("1 − Strong Click - 100%"));
+  }
+  if (effect == 3) {
+    Serial.println(F("14 − Strong Buzz - 100%"));
+  }
+  sensorValue = analogRead(LLC);
+  sensorValue1 = analogRead(Start);
+  sensorValue2 = analogRead(LCP1);
+  outputValue = map(sensorValue, 0, 1023, 0, 25);
+  analogWrite(analogOutPin, outputValue);
+  Serial.print(sensorValue);
+  Serial.print(",");
+  Serial.print(sensorValue1);
+  Serial.print(",");
+  Serial.print(outputValue);
+  Serial.print(",");
+  Serial.println(sensorValue2);
+  
+  drv.setWaveform(0, effect);  // play effect 
+  drv.setWaveform(1, 0);       // end waveform
+
+  // play the effect!
+  drv.go();
+
+  delay(5);
+
+  effect++;
+  if (effect > 3) effect = 1;
+}
