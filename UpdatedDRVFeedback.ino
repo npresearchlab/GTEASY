@@ -34,16 +34,16 @@ void loop() {
   Serial.println(sensorValue2);
   delay(250);
 
-  if(sensorValue < 341) {
+  if(sensorValue < 100) {
     drv.setWaveform(0, 13); 
     drv.go();
   }
-  else if(sensorValue > 341 && sensorValue < 682) {
+  else if(sensorValue > 100 && sensorValue < 300) {
     drv.setWaveform(0,1);
     drv.go();
     
   }
-  else if(sensorValue > 682) {
+  else if(sensorValue > 300) {
     drv.setWaveform(0,14);
     drv.go();
   }
