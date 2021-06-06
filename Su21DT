@@ -1,13 +1,13 @@
 #Program to Plot arduino input to plot for a discrete motor task
-#Code by: Hyungjun Park; Date started: 6-4-21
+#Code by: Hyungjun Park; Modified Date : 6-5-21
 #Acknowledgements: Aswinth Raj @ www.circuitdigest.com and Scott Mon's 1 hr "Arduino & Python communication w/Real-Time Plotting & 3D Modeling"
 #https://stackoverflow.com/questions/24072790/detect-key-press-in-python
 
 import serial   #serial lib included Pyserial not Serial this is important
 import time     #import time library and req to add time delay(necessary!)
-import numpy
-import matplotlib.pyplot as plt #all the plotting
-from drawnow import * # imports the entire library and updates the graph in real time
+import numpy as np
+import matplotlib.pyplot as plt     #all the plotting
+from drawnow import *   # imports the entire library and updates the graph in real time
 import keyboard  # using module keyboard for keypress
 
 randomNumberArray = []  #empty Array for incoming data
@@ -17,17 +17,18 @@ count = 0
 plt.ion()   #Tell matplotlib you want interactive mode i = interactive and on = on
 
 print("START")
-ArduinoSerial = serial.Serial('COM16', 115200)    # Creates Serial port object called ArduinoSerial
-time.sleep(2)   #waits for 2 seconds for the communication to get established and stabilize
+ArduinoSerial = serial.Serial('COM16', 9600)    # Creates Serial port object called ArduinoSerial
+time.sleep(1)   #waits for 1 seconds for the communication to get established and stabilize
 print("Connected to Arduino successfully!")
 
 def makeFig():  #create a function to make our desired plot
-    plt.ylim(0, 100)  #set y min and max values
-    plt.title('My Live Streaming Random Data')  #PLOT TITLE
+#    plt.title('My Live Streaming Random Data')  #PLOT TITLE
     plt.grid(True)      #plot's  grif
     plt.ylabel('Random Number')     #set ylabels
     plt.xlabel('Sample number')
-    plt.plot(randomNumberArray, color='red', marker='o', markerfacecolor='blue', label='Random Numbers')    #plot the randomNumber (3) with red dots and lines
+    plt.tight_layout()
+    plt.plot(randomNumberArray, color='red', marker='o', markerfacecolor='blue', label='pot1')    #plot the randomNumber (3) with red dots and lines
+    plt.plot(1000*np.sin(np.pi/2.), color='black', marker='*', markerfacecolor='green', label='sine')  # plot the randomNumber (3) with red dots and lines
     plt.legend(loc='upper left')    #plot the legend
 
 def getData():
@@ -38,9 +39,9 @@ def getData():
 
 def updateplot(var):
     global count
-    randomNumberArray.append(var[1])
+    randomNumberArray.append(var[0])
     drawnow(makeFig)
-    plt.pause(0.000001)
+    plt.pause(0.01)
     count += 1
     if count > 50:
         randomNumberArray.pop(0)
@@ -61,12 +62,12 @@ def keyin():
             if var == '1':    #so when we get a userinput of 1
                 ArduinoSerial.write(str.encode('1'))    #this sends data back through the arduino-python serial communications link
                 print('LED switched ON', a)
-                time.sleep(.05)  #small delay
+                #time.sleep(.05)  #small delay
 
             elif var == '0':  # userinput of 0
                 ArduinoSerial.write(str.encode('0'))  # this sends a 0
                 print('LED switched OFF', a)
-                time.sleep(.05)  #small delay
+                #time.sleep(.05)  #small delay
         except:
             break
 
@@ -74,7 +75,6 @@ print(getData())  #readin the serial data by lines
 
 while 1:    #this is saying while '1' == True never stop looping this while loop
     while firsttimecounter:
-        var = input('Enter 1 to turn ON LED and 0 to turn OFF LED')   #get input from user
         ##print('You entered ', var)  #prints out a confirmation that the input was received
         var = keyin()
         break
