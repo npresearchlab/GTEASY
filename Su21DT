@@ -20,16 +20,19 @@ print("START")
 ArduinoSerial = serial.Serial('COM16', 9600)    # Creates Serial port object called ArduinoSerial
 time.sleep(1)   #waits for 1 seconds for the communication to get established and stabilize
 print("Connected to Arduino successfully!")
+EndOfTime = 50
+timeArtificial = np.arange(0, EndOfTime, 1)
+amplitude = (1023/2)*np.sin(timeArtificial)+(1023/2)
 
 def makeFig():  #create a function to make our desired plot
-#    plt.title('My Live Streaming Random Data')  #PLOT TITLE
-    plt.grid(True)      #plot's  grif
-    plt.ylabel('Random Number')     #set ylabels
-    plt.xlabel('Sample number')
-    plt.tight_layout()
-    plt.plot(randomNumberArray, color='red', marker='o', markerfacecolor='blue', label='pot1')    #plot the randomNumber (3) with red dots and lines
-    plt.plot(1000*np.sin(np.pi/2.), color='black', marker='*', markerfacecolor='green', label='sine')  # plot the randomNumber (3) with red dots and lines
-    plt.legend(loc='upper left')    #plot the legend
+    global count
+    plt.title('My Live Streaming Random Data')  #PLOT TITLE
+    plt.xlabel('Time')# Give y axis label for the sine wave plot
+    plt.ylabel('Amplitude = sin(time)')
+    plt.grid(True, which='both')
+    plt.axhline(y=0, color='k')
+    plt.plot(timeArtificial, amplitude)  # plot the sine wave
+    plt.plot(timeArtificial[count], float(randomNumberArray[count]))    #plot the randomNumber (3) with red dots and lines
 
 def getData():
     global count
@@ -39,12 +42,15 @@ def getData():
 
 def updateplot(var):
     global count
-    randomNumberArray.append(var[0])
+    randomNumberArray.append(var[1])
     drawnow(makeFig)
-    plt.pause(0.01)
+    #plt.pause(0.01)
+    plt.pause(1)
     count += 1
-    if count > 50:
+    if count > EndOfTime:
+        exit()
         randomNumberArray.pop(0)
+
 
 def keyin():
     global var
