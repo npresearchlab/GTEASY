@@ -1,8 +1,3 @@
-#Program to Plot arduino input to plot for a discrete motor task
-#Code by: Hyungjun Park; Modified Date : 6-5-21
-#Acknowledgements: Aswinth Raj @ www.circuitdigest.com and Scott Mon's 1 hr "Arduino & Python communication w/Real-Time Plotting & 3D Modeling"
-#https://stackoverflow.com/questions/24072790/detect-key-press-in-python
-
 import serial   #serial lib included Pyserial not Serial this is important
 import time     #import time library and req to add time delay(necessary!)
 import numpy as np
@@ -10,77 +5,101 @@ import matplotlib.pyplot as plt     #all the plotting
 from drawnow import *   # imports the entire library and updates the graph in real time
 import keyboard  # using module keyboard for keypress
 
+
+#Program to Plot arduino input to plot for a discrete motor task
+#Code by: Hyungjun Park; Modified By : Ayanna Bell on Date : 6-9-21 
+#Acknowledgements: Aswinth Raj @ www.circuitdigest.com and Scott Mon's 1 hr "Arduino & Python communication w/Real-Time Plotting & 3D Modeling"
+#https://stackoverflow.com/questions/24072790/detect-key-press-in-python
+
 randomNumberArray = []  #empty Array for incoming data
 var = 0
 firsttimecounter = 1
 count = 0
 plt.ion()   #Tell matplotlib you want interactive mode i = interactive and on = on
+aya = str(0)
 
-print("START")
-ArduinoSerial = serial.Serial('COM16', 9600)    # Creates Serial port object called ArduinoSerial
-time.sleep(1)   #waits for 1 seconds for the communication to get established and stabilize
-print("Connected to Arduino successfully!")
-EndOfTime = 50
-timeArtificial = np.arange(0, EndOfTime, 1)
-amplitude = (1023/2)*np.sin(timeArtificial)+(1023/2)
+def DT():
+    print("START")
+    ArduinoSerial = serial.Serial('/dev/cu.usbserial-1410', 9600)    # Creates Serial port object called ArduinoSerial
+    time.sleep(1)   #waits for 1 seconds for the communication to get established and stabilize
+    print("Connected to Arduino successfully!")
+    EndOfTime = 50
+    timeArtificial = np.arange(0, EndOfTime, 0.1)
+    amplitude = (10)*np.sin(timeArtificial/4)+(10)
 
-def makeFig():  #create a function to make our desired plot
-    global count
-    plt.title('My Live Streaming Random Data')  #PLOT TITLE
-    plt.xlabel('Time')# Give y axis label for the sine wave plot
-    plt.ylabel('Amplitude = sin(time)')
-    plt.grid(True, which='both')
-    plt.axhline(y=0, color='k')
-    plt.plot(timeArtificial, amplitude)  # plot the sine wave
-    plt.plot(timeArtificial[count], float(randomNumberArray[count]))    #plot the randomNumber (3) with red dots and lines
+    def makeFig():  #create a function to make our desired plot
+        global count
+        plt.title('My Live Streaming Random Data')  #PLOT TITLE
+        plt.xlabel('Time')# Give y axis label for the sine wave plot
+        plt.ylabel('Amplitude = sin(time)')
+        plt.grid(True, which='both')
+        plt.axhline(y=10, color='k')
+        plt.plot(timeArtificial, amplitude)  # plot the sine wave
+        plt.plot(timeArtificial[count], float(randomNumberArray[count]))    #plot the randomNumber (3) with red dots and lines
 
-def getData():
-    global count
-    ardData = str(ArduinoSerial.readline(), 'utf-8')
-    ardData = ardData.split(',')
-    return ardData
+    def getData():
+        global count
+        ardData = str(ArduinoSerial.readline(), 'utf-8')
+        ardData = ardData.split(',')
+       # print(ardData)
+       # ric = ardData[2]
+       # ardData[2] = ric[len(ric) - 1:2]
+        return ardData
 
-def updateplot(var):
-    global count
-    randomNumberArray.append(var[1])
-    drawnow(makeFig)
-    #plt.pause(0.01)
-    plt.pause(1)
-    count += 1
-    if count > EndOfTime:
-        exit()
-        randomNumberArray.pop(0)
+    def updateplot(var):
+        global count
+       # compa = getData()
+      #  if compa[2] > amplitude:
+       #     exit()
+        randomNumberArray.append(var[2])
+        makeFig()
+        #drawnow(makeFig)
+        #plt.pause(0.01)
+        plt.plot(randomNumberArray)
+        plt.pause(0.5)
+        count += 1
+        if count > EndOfTime:
+            exit()
+            randomNumberArray.pop(0)
 
+    def keyin():
+        global var
+        while True:
+            a = getData()
+            updateplot(a)
+            try:  # used try so that if user pressed other than the given key error will not be shown
+                if aya=='1':  # if key '1' is pressed
+                    var = '1'
+                    #break  # finishing the loop
+                elif aya=='0':  # if key '0' is pressed
+                    var = '0'
+                    #break  # finishing the loop
 
-def keyin():
-    global var
-    while True:
-        a = getData()
-        updateplot(a)
-        try:  # used try so that if user pressed other than the given key error will not be shown
-            if keyboard.is_pressed('1'):  # if key '1' is pressed
-                var = '1'
-                #break  # finishing the loop
-            elif keyboard.is_pressed('0'):  # if key '0' is pressed
-                var = '0'
-                #break  # finishing the loop
+                if var == '1':    #so when we get a userinput of 1
+                    ArduinoSerial.write(str.encode('1'))    #this sends data back through the arduino-python serial communications link
+                    print('LED switched ON', a)
+                    #time.sleep(.05)  #small delay
 
-            if var == '1':    #so when we get a userinput of 1
-                ArduinoSerial.write(str.encode('1'))    #this sends data back through the arduino-python serial communications link
-                print('LED switched ON', a)
-                #time.sleep(.05)  #small delay
+                elif var == '0':  # userinput of 0
+                    ArduinoSerial.write(str.encode('0'))  # this sends a 0
+                    print('LED switched OFF', a)
+                    #time.sleep(.05)  #small delay
+            except:
+                break
 
-            elif var == '0':  # userinput of 0
-                ArduinoSerial.write(str.encode('0'))  # this sends a 0
-                print('LED switched OFF', a)
-                #time.sleep(.05)  #small delay
-        except:
+    print(getData())  #readin the serial data by lines
+
+    while 1:    #this is saying while '1' == True never stop looping this while loop
+        while firsttimecounter:
+            ##print('You entered ', var)  #prints out a confirmation that the input was received
+            var = keyin()
             break
 
-print(getData())  #readin the serial data by lines
-
-while 1:    #this is saying while '1' == True never stop looping this while loop
-    while firsttimecounter:
-        ##print('You entered ', var)  #prints out a confirmation that the input was received
-        var = keyin()
-        break
+i = 0
+while True:
+    val = input("Enter your value: ")
+    if val=="1":
+        i=i+1
+        DT()
+    else:
+        exit(0)
